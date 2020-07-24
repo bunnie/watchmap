@@ -74,9 +74,12 @@ def read_hr_bodge(hrfile):
     # returns only the last track
     return track_data
 
+def speed_conversion(raw):
+    return raw * 1.60934 * 2.0 # convert mph to kph, plus some scaling fudge factor
+
 def plot_osm_map(track, output='speed-map.html', hr=None):
     for i in range(len(track['speed'])):
-        track['speed'][i] *= 1.60934 * 2.0  # convert mph to kph, plus some scaling fudge factor
+        track['speed'][i] = speed_conversion(track['speed'][i])
     speeds = track['speed']
     minima = min(speeds)
     maxima = max(speeds)
@@ -90,7 +93,10 @@ def plot_osm_map(track, output='speed-map.html', hr=None):
         else:
             track['speed'][index] = track['speed'][index]
         if hr:
-            tooltip=str(track['speed'][index]) + ' ' + str(hr['hr'][index]) +'bpm'
+            try:
+                tooltip=str(track['speed'][index]) + ' ' + str(hr['hr'][index]) +'bpm'
+            except:
+                tooltip=str(track['speed'][index])
         else:
             tooltip=str(track['speed'][index])
         folium.CircleMarker(
@@ -108,8 +114,7 @@ def plot_osm_map(track, output='speed-map.html', hr=None):
 
 def plot_osm_hr_map(track, hr_file, output='hr-map.html'):
     for i in range(len(track['speed'])):
-        track['speed'][i] *= 1.60934 * 2.0  # convert mph to kph, plus some scaling fudge factor
-    speeds = track['speed']
+        track['speed'][i] = speed_conversion(track['speed'][i])
 
     hr = hr_file['hr']
     minima = min(hr)
@@ -118,7 +123,7 @@ def plot_osm_hr_map(track, hr_file, output='hr-map.html'):
     norm = matplotlib.colors.Normalize(vmin=minima, vmax=maxima, clip=True)
     mapper = cm.ScalarMappable(norm=norm, cmap=cm.plasma)
     m = folium.Map(location=[track['lat'][0], track['lon'][0]], zoom_start=15)
-    for index in range(len(track['lat'])):
+    for index in range(len(hr)):
         if track['speed'][index] == 0:
             track['speed'][index] = 0.01
         else:
@@ -174,8 +179,8 @@ def main():
 
     for track in read_gpx_file(speedfile):
         if hr:
-            plot_osm_map(track, 'speed-' + filename + '-' + args.output, hr)
-            plot_osm_hr_map(track, hr, 'hr-' + filename + '-' + args.output)
+            plot_osm_map(track, filename + '-speed-' + args.output, hr)
+            plot_osm_hr_map(track, hr, filename + '-hr-' + args.output)
         else:
             plot_osm_map(track, filename + '-' + args.output, None)
 
