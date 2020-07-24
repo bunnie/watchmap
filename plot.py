@@ -44,18 +44,6 @@ def read_gpx_file(gpxfile, maxpulse=187):
         }
         yield track_data
 
-def plot_map(track):
-    gmap = gmplot.GoogleMapPlotter(track['lat'][0], track['lon'][0], 14, apikey=apikey)
-    path = []
-    for index in range(len(track['lat'])):
-        path.append( (track['lat'][index], track['lon'][index] ) )
-
-    gpath = zip(*path)
-
-    gmap.plot(*gpath, edge_width=7, color='red')
-    # gmap.marker(track['lat'][0], track['lon'][0], color='cornflowerblue')
-    gmap.draw('map.html')
-
 def plot_osm_map(track):
     speeds = track['speed']
     minima = min(speeds)
@@ -79,19 +67,6 @@ def plot_osm_map(track):
 
     m.save('folium.html')
 
-
-def plot_speed(track):
-    speeds = track['speed']
-    minima = min(speeds)
-    maxima = max(speeds)
-
-    norm = matplotlib.colors.Normalize(vmin=minima, vmax=maxima, clip=True)
-    mapper = cm.ScalarMappable(norm=norm, cmap=cm.plasma)
-    gmap = gmplot.GoogleMapPlotter(track['lat'][0], track['lon'][0], 14, apikey=apikey)
-    for index in range(len(track['lat'])):
-        gmap.circle(track['lat'][index], track['lon'][index], track['speed'][index] * 15, face_alpha=0.2, edge_width=0, color=matplotlib.colors.to_hex(mapper.to_rgba(track['speed'][index])))
-
-    gmap.draw('map.html')
 
 for track in read_gpx_file('2020-07-23-16-19-52-speed.gpx'):
     #fig = plot_speed(track)
