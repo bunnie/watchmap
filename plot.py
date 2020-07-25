@@ -90,13 +90,12 @@ def plot_osm_map(track, output='speed-map.html', hr=None):
     for index in range(len(track['lat'])):
         if track['speed'][index] == 0:
             track['speed'][index] = 0.01
-        else:
-            track['speed'][index] = track['speed'][index]
+
         if hr:
             try:
-                tooltip=str(track['speed'][index]) + ' ' + str(hr['hr'][index]) +'bpm'
+                tooltip="{:0.1f}kph".format(track['speed'][index]) + ' ' + str(hr['hr'][index]) +'bpm'
             except:
-                tooltip=str(track['speed'][index])
+                tooltip="{:0.1f}kph".format(track['speed'][index])
         else:
             tooltip=str(track['speed'][index])
         folium.CircleMarker(
@@ -126,12 +125,11 @@ def plot_osm_hr_map(track, hr_file, output='hr-map.html'):
     for index in range(len(hr)):
         if track['speed'][index] == 0:
             track['speed'][index] = 0.01
-        else:
-            track['speed'][index] = track['speed'][index]
+
         if hr:
-            tooltip=str(track['speed'][index]) + ' ' + str(hr[index]) +'bpm'
+            tooltip="{:0.1f}kph".format(track['speed'][index]) + ' ' + str(hr[index]) +'bpm'
         else:
-            tooltip=str(track['speed'][index])
+            tooltip="{:0.1f}kph".format(track['speed'][index])
         folium.CircleMarker(
             location=(track['lat'][index], track['lon'][index]),
             radius=(hr[index] - minima) / 5.0,
