@@ -112,12 +112,15 @@ def plot_osm_map(track, output='speed-map.html', hr=None):
 
 
 def plot_osm_hr_map(track, hr_file, output='hr-map.html'):
-    for i in range(len(track['speed'])):
-        track['speed'][i] = speed_conversion(track['speed'][i])
+    # speeds will have already been adjusted since we side-effect the global record
+#    for i in range(len(track['speed'])):
+#        track['speed'][i] = speed_conversion(track['speed'][i])
 
     hr = hr_file['hr']
-    minima = min(hr)
-    maxima = max(hr)
+
+    speeds = track['speed']
+    minima = min(speeds)
+    maxima = max(speeds)
 
     norm = matplotlib.colors.Normalize(vmin=minima, vmax=maxima, clip=True)
     mapper = cm.ScalarMappable(norm=norm, cmap=cm.plasma)
@@ -132,9 +135,9 @@ def plot_osm_hr_map(track, hr_file, output='hr-map.html'):
             tooltip="{:0.1f}kph".format(track['speed'][index])
         folium.CircleMarker(
             location=(track['lat'][index], track['lon'][index]),
-            radius=(hr[index] - minima) / 5.0,
+            radius=((hr[index] - minima) / 50.0)**2,
             tooltip=tooltip,
-            fill_color=matplotlib.colors.to_hex(mapper.to_rgba(hr[index])),
+            fill_color=matplotlib.colors.to_hex(mapper.to_rgba(speeds[index])),
             fill=True,
             fill_opacity=0.2,
             weight=0,
