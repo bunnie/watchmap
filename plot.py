@@ -150,7 +150,7 @@ def plot_osm_hr_map(track, hr_file, output='hr-map.html', age=45, resting_rate=5
 
     for name, entry in rate_table.items():
         (hrmin, hrmax) = entry[0]
-        print(name + ' ({:3.0f}-{:3.0f}): '.format(hrmin, hrmax) + str(timedelta(seconds= (entry[1] / cum_time) * totaltime)).split('.')[0] + ' {:.1f}'.format(100.0 * (entry[1] / totaltime)) + '%')
+        print(name + ' ({:3.0f}-{:3.0f}): '.format(hrmin, hrmax) + str(timedelta(seconds= (entry[1] / cum_time) * totaltime)).split('.')[0] + ' {:.1f}'.format(100.0 * (entry[1] / cum_time)) + '%')
 
     speeds = track['speed']
     minima = min(speeds)
