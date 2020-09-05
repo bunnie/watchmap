@@ -8,6 +8,8 @@ from xml.dom import minidom
 import matplotlib
 import matplotlib.cm as cm
 import folium
+from folium.features import DivIcon
+from datetime import datetime, timedelta
 
 # snippets of the gpx parsing code came from gpxplotter (https://github.com/andersle/gpxplotter)
 def _get_gpx_text(track, tagname, type="str"):
@@ -111,12 +113,44 @@ def plot_osm_map(track, output='speed-map.html', hr=None):
     m.save(output)
 
 
-def plot_osm_hr_map(track, hr_file, output='hr-map.html'):
+def plot_osm_hr_map(track, hr_file, output='hr-map.html', age=45, resting_rate=50, hr_plot_interval=30):
     # speeds will have already been adjusted since we side-effect the global record
 #    for i in range(len(track['speed'])):
 #        track['speed'][i] = speed_conversion(track['speed'][i])
 
+    maxrate = 220-age
+    reserve = maxrate-resting_rate
+    rate_table = {
+       'resting  ' : [(0.0*reserve + resting_rate, 0.5*reserve + resting_rate), 0],
+       'easy     ' : [(0.5*reserve + resting_rate, 0.6*reserve + resting_rate), 0],
+       'fatburn  ' : [(0.6*reserve + resting_rate, 0.70*reserve + resting_rate), 0],
+       'cardio   ' : [(0.70*reserve + resting_rate, 0.80*reserve + resting_rate), 0],
+       'sprint   ' : [(0.80*reserve + resting_rate, 0.90*reserve + resting_rate), 0],
+       'anaerobic' : [(0.9*reserve + resting_rate, 1.0*reserve + resting_rate), 0],
+    }
+
     hr = hr_file['hr']
+    times = track['time']
+    datetimes = []
+    for t in times:
+        datetimes.append(datetime.strptime(t, '%Y-%m-%dT%H:%M:%SZ'))
+
+    totaltime = (datetimes[-1] - datetimes[0]).total_seconds()
+
+    for i in range(0,len(datetimes) - 1):
+        cur_hr = hr[i]
+        for name, entry in rate_table.items():
+            (hrmin, hrmax) = entry[0]
+            if hrmin < cur_hr and hrmax <= cur_hr:
+                entry[1] += (datetimes[i+1] - datetimes[i]).total_seconds()
+
+    cum_time = 0 # this is different, because fractional seconds are lost every reading and eventually creates a 2x error!
+    for name, entry in rate_table.items():
+        cum_time += entry[1]
+
+    for name, entry in rate_table.items():
+        (hrmin, hrmax) = entry[0]
+        print(name + ' ({:3.0f}-{:3.0f}): '.format(hrmin, hrmax) + str(timedelta(seconds= (entry[1] / cum_time) * totaltime)).split('.')[0] + ' {:.1f}'.format(100.0 * (entry[1] / totaltime)) + '%')
 
     speeds = track['speed']
     minima = min(speeds)
@@ -125,7 +159,27 @@ def plot_osm_hr_map(track, hr_file, output='hr-map.html'):
     norm = matplotlib.colors.Normalize(vmin=minima, vmax=maxima, clip=True)
     mapper = cm.ScalarMappable(norm=norm, cmap=cm.plasma)
     m = folium.Map(location=[track['lat'][0], track['lon'][0]], zoom_start=15)
-    for index in range(len(hr)):
+    elapsed = 0.0
+    cur_interval = 0.0
+    hr_avg_sum = 0.0
+    hr_n = 0
+    for index in range(len(hr) - 1):
+        elapsed += ( datetime.strptime(track['time'][index+1], '%Y-%m-%dT%H:%M:%SZ') - datetime.strptime(track['time'][index], '%Y-%m-%dT%H:%M:%SZ') ).total_seconds()
+        hr_avg_sum += hr[index]
+        hr_n += 1
+        if elapsed >= cur_interval:
+            cur_interval += hr_plot_interval
+            folium.map.Marker(
+                [track['lat'][index], track['lon'][index]],
+                icon=DivIcon(
+                    icon_size=(60,12),
+                    icon_anchor=(0,0),
+                    html='<div style="font-size: 10pt">'+'{:.0f}'.format(hr_avg_sum / hr_n)+'</div>',
+                )
+            ).add_to(m)
+            hr_avg_sum = 0.0
+            hr_n = 0
+
         if track['speed'][index] == 0:
             track['speed'][index] = 0.01
 
