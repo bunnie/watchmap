@@ -141,7 +141,7 @@ def plot_osm_hr_map(track, hr_file, output='hr-map.html', age=45, resting_rate=5
         cur_hr = hr[i]
         for name, entry in rate_table.items():
             (hrmin, hrmax) = entry[0]
-            if hrmin < cur_hr and hrmax <= cur_hr:
+            if hrmin < cur_hr and cur_hr <= hrmax:
                 entry[1] += (datetimes[i+1] - datetimes[i]).total_seconds()
 
     cum_time = 0 # this is different, because fractional seconds are lost every reading and eventually creates a 2x error!
