@@ -77,7 +77,7 @@ def read_hr_bodge(hrfile):
     return track_data
 
 def speed_conversion(raw):
-    return raw * 1.60934 * 2.0 # convert mph to kph, plus some scaling fudge factor
+    return 3.6*raw # convert m/s to km/h
 
 def plot_osm_map(track, output='speed-map.html', hr=None):
     for i in range(len(track['speed'])):
